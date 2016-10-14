@@ -60,6 +60,11 @@ let attributeConsistencyError = "Default and mention attributes must contain the
      @brief The range to place the mention at
      */
     var szMentionRange: NSRange {get}
+    
+    /**
+    @brief A mention string that can be shared
+    */
+    func toString() -> String
 }
 
 open class SZMentionsListener: NSObject, UITextViewDelegate {
@@ -766,5 +771,34 @@ open class SZMentionsListener: NSObject, UITextViewDelegate {
         }
         
         return true
+    }
+    
+    // MARK: Mentions TextView Text
+    open func textForSharing() -> String{
+        return self.mentionsTextView.textFortmatted(mentions: mentions)
+    }
+}
+
+// MARK: TextView Extension
+extension UITextView{
+    fileprivate func textFortmatted(mentions: [SZMention]) -> String{
+        let originalText = self.text as NSString
+        var stringFormatted: String = ""
+        
+        var lastIndex = 0
+        for mention in mentions {
+            let buffer = originalText.substring(with: NSMakeRange(lastIndex, mention.mentionRange.location-lastIndex))
+            
+            stringFormatted = stringFormatted.appending(buffer)
+            lastIndex = mention.mentionRange.location+mention.mentionRange.length
+            stringFormatted = stringFormatted.appending(mention.mentionObject.toString())
+        }
+        
+        if lastIndex < originalText.length {
+            let buffer = originalText.substring(from: lastIndex)
+            stringFormatted = stringFormatted.appending(buffer)
+        }
+        
+        return stringFormatted
     }
 }
