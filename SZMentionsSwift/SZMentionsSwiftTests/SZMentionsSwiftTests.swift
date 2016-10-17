@@ -410,6 +410,18 @@ class SZMentionsSwiftTests: XCTestCase, SZMentionsManagerProtocol, UITextViewDel
         
         XCTAssertEqual(mentionsListener?.textForSharing(),"Hi @[John Appleseed][1234]. Do you know @[Ada Augusta Byron][1235]?.","Messaged returned by listener should be @[John Appleseed][1234]")
     }
+    
+    func testShouldShowMentionsListWhenTextInsertedIsEqualToMinimumCharactersToTrigger(){
+        mentionsListener = SZMentionsListener.init(mentionTextView: textView, mentionsManager: self, textViewDelegate: self, mentionTextAttributes: nil, defaultTextAttributes: nil, spaceAfterMention: true, addMentionOnReturnKey: true, trigger: "@", cooldownInterval: 0.5, minimumCharactersForTrigger: 2)
+        
+        textView.insertText("@j")
+        
+        XCTAssert(hidingMentionsList == true,"ShowMentionsList shouldn't be displayed until we type at least 2 characters after the trigger.")
+        
+        textView.insertText("o")
+        
+        XCTAssert(hidingMentionsList == false, "ShowMentionsList should be displayed when we type de minimum characters to trigger the mention.")
+    }
   
     override func tearDown() {
         // Put teardown code here. This method is called after the invocation of each test method in the class.

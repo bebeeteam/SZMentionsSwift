@@ -80,6 +80,11 @@ open class SZMentionsListener: NSObject, UITextViewDelegate {
      @brief Trigger to start a mention. Default: @
      */
     fileprivate var trigger: String = "@"
+    
+    /**
+     @brief minimum character to start a mention. Default: 0
+     */
+    fileprivate var minimumCharactersForTrigger: Int = 0
 
     /**
      @brief Text attributes to be applied to all text excluding mentions.
@@ -301,7 +306,43 @@ open class SZMentionsListener: NSObject, UITextViewDelegate {
             spaceAfterMention: spaceAfterMention,
             addMentionOnReturnKey: addMentionOnReturnKey,
             trigger: trigger,
-            cooldownInterval: 0.5)
+            cooldownInterval: 0.5,
+            minimumCharactersForTrigger: 0)
+    }
+    
+    
+    /**
+     @brief Initializer that allows for customization of text attributes for default text and mentions
+     @param mentionTextView: - the text view to manage mentions for
+     @param mentionsManager: - the object that will handle showing and hiding of the mentions picker
+     @param textViewDelegate: - the object that will handle textview delegate methods
+     @param mentionTextAttributes - text style to show for mentions
+     @param defaultTextAttributes - text style to show for default text
+     @param spaceAfterMention - whether or not to add a space after adding a mention
+     @param addMentionOnReturnKey - tell listener for observer Return key
+     @param trigger - what text triggers showing the mentions list
+     */
+    public convenience init(
+        mentionTextView: UITextView,
+        mentionsManager: SZMentionsManagerProtocol,
+        textViewDelegate: UITextViewDelegate?,
+        mentionTextAttributes: [SZAttribute]?,
+        defaultTextAttributes: [SZAttribute]?,
+        spaceAfterMention: Bool,
+        addMentionOnReturnKey: Bool,
+        trigger: String,
+        minimumCharactersForTrigger: Int) {
+        self.init(
+            mentionTextView: mentionTextView,
+            mentionsManager: mentionsManager,
+            textViewDelegate: textViewDelegate,
+            mentionTextAttributes: mentionTextAttributes,
+            defaultTextAttributes: defaultTextAttributes,
+            spaceAfterMention: spaceAfterMention,
+            addMentionOnReturnKey: addMentionOnReturnKey,
+            trigger: trigger,
+            cooldownInterval: 0.5,
+            minimumCharactersForTrigger: minimumCharactersForTrigger)
     }
 
     /**
@@ -315,6 +356,7 @@ open class SZMentionsListener: NSObject, UITextViewDelegate {
      @param addMentionOnReturnKey - tell listener for observer Return key
      @param trigger - what text triggers showing the mentions list
      @param cooldownInterval - amount of time between show / hide mentions calls
+     @param minimumCharactersForTrigger - Minimum
      */
     public init(
         mentionTextView: UITextView,
@@ -325,12 +367,14 @@ open class SZMentionsListener: NSObject, UITextViewDelegate {
         spaceAfterMention: Bool,
         addMentionOnReturnKey: Bool,
         trigger: String,
-        cooldownInterval: TimeInterval) {
+        cooldownInterval: TimeInterval,
+        minimumCharactersForTrigger: Int) {
         self.mentionsTextView = mentionTextView
         self.mentionsManager = mentionsManager
         self.delegate = textViewDelegate
         self.spaceAfterMention = spaceAfterMention
         self.addMentionAfterReturnKey = addMentionOnReturnKey
+        self.minimumCharactersForTrigger = minimumCharactersForTrigger
         if (defaultTextAttributes != nil) {
             self.defaultTextAttributes = defaultTextAttributes!
         }
@@ -406,19 +450,22 @@ open class SZMentionsListener: NSObject, UITextViewDelegate {
 
 
         var textBeforeTrigger = " "
+        var textAfterTrigger = ""
         let location = substring.range(
             of: trigger as String,
             options: NSString.CompareOptions.backwards).location
 
         if location != NSNotFound {
-            mentionEnabled = location == 0
+            textAfterTrigger = substring.substring(from: location+1)
+            mentionEnabled = location == 0 && textAfterTrigger.utf16.count >= minimumCharactersForTrigger
 
             if location > 0 {
                 //Determine whether or not a space exists before the trigger.
                 //(in the case of an @ trigger this avoids showing the mention list for an email address)
                 let substringRange = NSRange.init(location: location - 1, length: 1)
                 textBeforeTrigger = substring.substring(with: substringRange)
-                mentionEnabled = textBeforeTrigger == " " || textBeforeTrigger == "\n"
+                mentionEnabled = (textBeforeTrigger == " " && (textAfterTrigger.utf16.count >= minimumCharactersForTrigger)) ||
+                    (textBeforeTrigger == "\n" && (textAfterTrigger.utf16.count >= minimumCharactersForTrigger))
             }
         }
 
