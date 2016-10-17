@@ -12,6 +12,14 @@ import SZMentionsSwift
 class SZExampleMention: SZCreateMentionProtocol {
     @objc var szMentionName: String = ""
     @objc var szMentionRange: NSRange = NSMakeRange(0, 0)
+    var szMentionId: Int = 0
+    
+    /**
+     @brief A mention string that can be shared
+     */
+    public func toString() -> String {
+        return "@[\(szMentionName)][\(szMentionId)]"
+    }
 }
 
 class SZMentionsSwiftTests: XCTestCase, SZMentionsManagerProtocol, UITextViewDelegate {
@@ -380,6 +388,27 @@ class SZMentionsSwiftTests: XCTestCase, SZMentionsManagerProtocol, UITextViewDel
 
     func shouldAddMentionOnReturnKey() {
       shouldAddMentionOnReturnKeyCalled = true
+    }
+    
+    func testThatMentionsListenerReturnsTextFormattedBasedOnSZMentionConcreteFormatter(){
+        let mention = SZExampleMention()
+        mention.szMentionName = "John Appleseed"
+        mention.szMentionId = 1234
+        
+        let mention2 = SZExampleMention()
+        mention2.szMentionName = "Ada Augusta Byron"
+        mention2.szMentionId = 1235
+        
+        textView.insertText("Hi @J")
+        mentionsListener?.addMention(mention)
+        
+        textView.insertText(". Do you know @A")
+        mentionsListener?.addMention(mention2)
+        
+        textView.insertText("?.")
+        
+        
+        XCTAssertEqual(mentionsListener?.textForSharing(),"Hi @[John Appleseed][1234]. Do you know @[Ada Augusta Byron][1235]?.","Messaged returned by listener should be @[John Appleseed][1234]")
     }
   
     override func tearDown() {

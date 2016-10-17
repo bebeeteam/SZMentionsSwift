@@ -12,4 +12,12 @@ import SZMentionsSwift
 class SZExampleMention: SZCreateMentionProtocol {
     @objc var szMentionName: String = ""
     @objc var szMentionRange: NSRange = NSMakeRange(0, 0)
+    var szMentionId: Int = 0
+    
+    /**
+     @brief A mention string that can be shared
+     */
+    public func toString() -> String {
+        return "@[\(szMentionName)][\(szMentionId)]"
+    }
 }
