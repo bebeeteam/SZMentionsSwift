@@ -432,7 +432,7 @@ open class SZMentionsListener: NSObject, UITextViewDelegate {
                             with: "")
                         self.filterString = self.filterString?.replacingOccurrences(of: "\n", with: "")
 
-                        if self.filterString?.characters.count > 0 &&
+                        if self.filterString?.utf16.count > 0 &&
                             (self.cooldownTimer == nil || self.cooldownTimer?.isValid == false) {
                             self.stringCurrentlyBeingFiltered = filterString
                             self.mentionsManager.showMentionsListWithString(filterString!)
@@ -459,7 +459,7 @@ open class SZMentionsListener: NSObject, UITextViewDelegate {
     fileprivate func shouldAdjust(_ textView: UITextView, range: NSRange, text: String) -> Bool {
         var shouldAdjust = true
 
-        if (textView.text.characters.count == 0) {
+        if (textView.text.utf16.count == 0) {
             self.resetEmpty(textView)
         }
 
@@ -501,7 +501,7 @@ open class SZMentionsListener: NSObject, UITextViewDelegate {
 
         SZAttributedStringHelper.apply(
             self.defaultTextAttributes,
-            range: NSRange.init(location: range.location, length: text.characters.count),
+            range: NSRange.init(location: range.location, length: text.utf16.count),
             mutableAttributedString: mutableAttributedString)
         self.settingText = true
         textView.attributedText = mutableAttributedString
@@ -510,7 +510,7 @@ open class SZMentionsListener: NSObject, UITextViewDelegate {
         var newRange = NSRange.init(location: range.location, length: 0)
 
         if newRange.length <= 0 {
-            newRange.location = range.location + text.characters.count
+            newRange.location = range.location + text.utf16.count
         }
 
         textView.selectedRange = newRange
@@ -575,7 +575,7 @@ open class SZMentionsListener: NSObject, UITextViewDelegate {
 
         self.currentMentionRange = NSMakeRange(
             self.currentMentionRange!.location,
-            mention.szMentionName.characters.count)
+            mention.szMentionName.utf16.count)
 
         let szmention = SZMention.init(
             mentionRange: self.currentMentionRange!,
@@ -624,7 +624,7 @@ open class SZMentionsListener: NSObject, UITextViewDelegate {
         self.settingText = true
         textView.attributedText = mutableAttributedString as! NSMutableAttributedString
         self.settingText = false
-        textView.selectedRange = NSMakeRange(range.location + text.characters.count, 0)
+        textView.selectedRange = NSMakeRange(range.location + text.utf16.count, 0)
 
         let _ = self.delegate?.textView?(textView, shouldChangeTextIn: range, replacementText: text)
 
@@ -660,7 +660,7 @@ open class SZMentionsListener: NSObject, UITextViewDelegate {
      @param timer: the timer that called the method
      */
     internal func cooldownTimerFired(_ timer: Timer) {
-        if ((self.filterString?.characters.count) != nil  && self.filterString != self.stringCurrentlyBeingFiltered) {
+        if ((self.filterString?.utf16.count) != nil  && self.filterString != self.stringCurrentlyBeingFiltered) {
             self.stringCurrentlyBeingFiltered = filterString
             self.mentionsManager.showMentionsListWithString(filterString!)
         }
