@@ -41,8 +41,7 @@ class SZExampleMentionsTableViewDataManager: NSObject, UITableViewDataSource, UI
         var tempMentions = [SZExampleMention]()
 
         for name in names {
-            let mention = SZExampleMention.init()
-            mention.szMentionName = name
+            let mention = SZExampleMention.init(withName: name)
             tempMentions.append(mention)
         }
 

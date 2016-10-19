@@ -10,8 +10,7 @@ import XCTest
 import SZMentionsSwift
 
 class SZExampleMention: SZCreateMentionProtocol {
-    @objc var szMentionName: String = ""
-    @objc var szMentionRange: NSRange = NSMakeRange(0, 0)
+    private(set) var szMentionName: String = ""
     var szMentionId: Int = 0
     
     /**
@@ -19,6 +18,10 @@ class SZExampleMention: SZCreateMentionProtocol {
      */
     public func toString() -> String {
         return "@[\(szMentionName)][\(szMentionId)]"
+    }
+    
+    public init(withName name: String){
+        self.szMentionName = name
     }
 }
 
@@ -77,15 +80,15 @@ class SZMentionsSwiftTests: XCTestCase, SZMentionsManagerProtocol, UITextViewDel
     func testMentionsCanBePlacedInAdvance() {
         textView.text = "Testing Steven Zweier and Tiffany get mentioned correctly";
 
-        let mention = SZExampleMention()
-        mention.szMentionName = "Steve"
-        mention.szMentionRange = NSMakeRange(8, 13)
+        let mentionData = SZExampleMention(withName: "Steve")
+        let mention = SZMention.init(location:8, mentionData: mentionData)
 
-        let mention2 = SZExampleMention()
-        mention2.szMentionName = "Tiff"
-        mention2.szMentionRange = NSMakeRange(26, 7)
+        
+        let mentionData2 = SZExampleMention(withName: "Tiff")
+        let mention2 = SZMention.init(location:26, mentionData: mentionData2)
+        
 
-        let insertMentions : Array<SZCreateMentionProtocol> = [mention, mention2]
+        let insertMentions : Array<SZMention> = [mention, mention2]
 
         mentionsListener!.insertExistingMentions(insertMentions)
 
@@ -99,8 +102,7 @@ class SZMentionsSwiftTests: XCTestCase, SZMentionsManagerProtocol, UITextViewDel
 
     func testMentionIsAdded() {
         textView.insertText("@t")
-        let mention = SZExampleMention.init()
-        mention.szMentionName = "Steven"
+        let mention = SZExampleMention(withName: "Steven")
         mentionsListener?.addMention(mention)
 
         XCTAssert(mentionsListener?.mentions.count == 1)
@@ -108,8 +110,7 @@ class SZMentionsSwiftTests: XCTestCase, SZMentionsManagerProtocol, UITextViewDel
 
     func testMentionPositionIsCorrectToStartText() {
         textView.insertText("@t")
-        let mention = SZExampleMention.init()
-        mention.szMentionName = "Steven"
+        let mention = SZExampleMention(withName: "Steven")
         mentionsListener?.addMention(mention)
 
         XCTAssert(mentionsListener?.mentions.first?.mentionRange.location == 0)
@@ -117,8 +118,7 @@ class SZMentionsSwiftTests: XCTestCase, SZMentionsManagerProtocol, UITextViewDel
 
     func testMentionPositionIsCorrectInTheMidstOfText() {
         textView.insertText("Testing @t")
-        let mention = SZExampleMention.init()
-        mention.szMentionName = "Steven"
+        let mention = SZExampleMention(withName: "Steven")
         mentionsListener?.addMention(mention)
 
         XCTAssert(mentionsListener?.mentions.first?.mentionRange.location == 8)
@@ -126,15 +126,13 @@ class SZMentionsSwiftTests: XCTestCase, SZMentionsManagerProtocol, UITextViewDel
 
     func testMentionLengthIsCorrect() {
         textView.insertText("@t")
-        var mention = SZExampleMention.init()
-        mention.szMentionName = "Steven"
+        var mention = SZExampleMention(withName: "Steven")
         mentionsListener?.addMention(mention)
 
         XCTAssert(mentionsListener?.mentions.first?.mentionRange.length == 6)
 
         textView.insertText("Testing @t")
-        mention = SZExampleMention.init()
-        mention.szMentionName = "Steven Zweier"
+        mention = SZExampleMention(withName: "Steven Zweier")
         mentionsListener?.addMention(mention)
 
         XCTAssert(mentionsListener?.mentions[1].mentionRange.length == 13)
@@ -142,8 +140,7 @@ class SZMentionsSwiftTests: XCTestCase, SZMentionsManagerProtocol, UITextViewDel
 
     func testMentionLocationIsAdjustedProperly() {
         textView.insertText("Testing @t")
-        let mention = SZExampleMention.init()
-        mention.szMentionName = "Steven"
+        let mention = SZExampleMention(withName: "Steven")
         mentionsListener?.addMention(mention)
 
         XCTAssert(mentionsListener?.mentions.first?.mentionRange.location == 8)
@@ -175,8 +172,7 @@ class SZMentionsSwiftTests: XCTestCase, SZMentionsManagerProtocol, UITextViewDel
 
     func testMentionLocationIsAdjustedProperlyWhenAMentionIsInsertsBehindAMentionSpaceAfterMentionIsFalse() {
         textView.insertText("@t")
-        var mention = SZExampleMention.init()
-        mention.szMentionName = "Steven"
+        var mention = SZExampleMention(withName: "Steven")
         mentionsListener?.addMention(mention)
 
         XCTAssert(mentionsListener?.mentions.first?.mentionRange.location == 0)
@@ -187,8 +183,7 @@ class SZMentionsSwiftTests: XCTestCase, SZMentionsManagerProtocol, UITextViewDel
         if mentionsListener?.textView(textView, shouldChangeTextIn: NSMakeRange(0, 0), replacementText: "@t") == true {
             textView.insertText("@t")
         }
-        mention = SZExampleMention.init()
-        mention.szMentionName = "Steven Zweier"
+        mention = SZExampleMention(withName: "Steven Zweier")
         mentionsListener?.addMention(mention)
 
         XCTAssert(mentionsListener?.mentions[1].mentionRange.location == 0)
@@ -199,8 +194,7 @@ class SZMentionsSwiftTests: XCTestCase, SZMentionsManagerProtocol, UITextViewDel
     func testMentionLocationIsAdjustedProperlyWhenAMentionIsInsertsBehindAMentionSpaceAfterMentionIsTrue() {
         mentionsListener?.setValue(true, forKey: "spaceAfterMention")
         textView.insertText("@t")
-        var mention = SZExampleMention.init()
-        mention.szMentionName = "Steven"
+        var mention = SZExampleMention(withName: "Steven")
         mentionsListener?.addMention(mention)
 
         XCTAssert(mentionsListener?.mentions.first?.mentionRange.location == 0)
@@ -211,8 +205,7 @@ class SZMentionsSwiftTests: XCTestCase, SZMentionsManagerProtocol, UITextViewDel
         if mentionsListener?.textView(textView, shouldChangeTextIn: NSMakeRange(0, 0), replacementText: "@t") == true {
             textView.insertText("@t")
         }
-        mention = SZExampleMention.init()
-        mention.szMentionName = "Steven Zweier"
+        mention = SZExampleMention(withName: "Steven Zweier")
         mentionsListener?.addMention(mention)
 
         XCTAssert(mentionsListener?.mentions[1].mentionRange.location == 0)
@@ -222,8 +215,7 @@ class SZMentionsSwiftTests: XCTestCase, SZMentionsManagerProtocol, UITextViewDel
 
     func testEditingTheMiddleOfTheMentionRemovesTheMention() {
         textView.insertText("Testing @t")
-        let mention = SZExampleMention.init()
-        mention.szMentionName = "Steven"
+        let mention = SZExampleMention(withName: "Steven")
         mentionsListener?.addMention(mention)
 
         XCTAssert(mentionsListener?.mentions.count == 1)
@@ -239,8 +231,7 @@ class SZMentionsSwiftTests: XCTestCase, SZMentionsManagerProtocol, UITextViewDel
 
     func testEditingTheEndOfTheMentionRemovesTheMention() {
         textView.insertText("Testing @t")
-        let mention = SZExampleMention.init()
-        mention.szMentionName = "Steven"
+        let mention = SZExampleMention(withName: "Steven")
         mentionsListener?.addMention(mention)
 
         XCTAssert(mentionsListener?.mentions.count == 1)
@@ -256,8 +247,7 @@ class SZMentionsSwiftTests: XCTestCase, SZMentionsManagerProtocol, UITextViewDel
 
     func testEditingAfterTheMentionDoesNotDeleteTheMention() {
         textView.insertText("Testing @t")
-        let mention = SZExampleMention.init()
-        mention.szMentionName = "Steven"
+        let mention = SZExampleMention(withName: "Steven")
         mentionsListener?.addMention(mention)
 
         textView.insertText(" ")
@@ -275,8 +265,7 @@ class SZMentionsSwiftTests: XCTestCase, SZMentionsManagerProtocol, UITextViewDel
 
     func testPastingTextBeforeLeadingMentionResetsAttributes() {
         textView.insertText("@s")
-        let mention = SZExampleMention.init()
-        mention.szMentionName = "Steven"
+        let mention = SZExampleMention(withName: "Steven")
         mentionsListener?.addMention(mention)
         textView.selectedRange = NSMakeRange(0, 0)
         if mentionsListener?.textView(textView, shouldChangeTextIn: textView.selectedRange, replacementText: "test") == true {
@@ -300,8 +289,7 @@ class SZMentionsSwiftTests: XCTestCase, SZMentionsManagerProtocol, UITextViewDel
         textView.selectedRange = NSMakeRange(0, 0)
         textView.insertText("@st")
 
-        let mention = SZExampleMention.init()
-        mention.szMentionName = "Steven"
+        let mention = SZExampleMention(withName: "Steven")
 
         mentionsListener?.addMention(mention)
 
@@ -316,8 +304,7 @@ class SZMentionsSwiftTests: XCTestCase, SZMentionsManagerProtocol, UITextViewDel
         textView.selectedRange = NSMakeRange(0, 0)
         textView.insertText("@st")
 
-        let mention = SZExampleMention.init()
-        mention.szMentionName = "Steven"
+        let mention = SZExampleMention(withName: "Steven")
 
         mentionsListener?.addMention(mention)
 
@@ -328,8 +315,7 @@ class SZMentionsSwiftTests: XCTestCase, SZMentionsManagerProtocol, UITextViewDel
     func testAddingTestImmediatelyAfterMentionChangesToDefaultText()
     {
         textView.insertText("@s")
-        let mention = SZExampleMention()
-        mention.szMentionName = "Steven"
+        let mention = SZExampleMention(withName: "Steven")
         self.mentionsListener?.addMention(mention)
 
         if mentionsListener?.textView(textView, shouldChangeTextIn: self.textView.selectedRange, replacementText: "test") == true {
@@ -353,8 +339,7 @@ class SZMentionsSwiftTests: XCTestCase, SZMentionsManagerProtocol, UITextViewDel
     
     func testMentionPositionIsCorrectToStartTextOnNewline() {
         textView.insertText("\n@t")
-        let mention = SZExampleMention.init()
-        mention.szMentionName = "Steven"
+        let mention = SZExampleMention(withName: "Steven")
         mentionsListener?.addMention(mention)
         
         XCTAssert(mentionsListener?.mentions.first?.mentionRange.location == 1)
@@ -362,8 +347,7 @@ class SZMentionsSwiftTests: XCTestCase, SZMentionsManagerProtocol, UITextViewDel
     
     func testMentionPositionIsCorrectInTheMidstOfNewlineText() {
         textView.insertText("Testing \nnew line @t")
-        let mention = SZExampleMention.init()
-        mention.szMentionName = "Steven"
+        let mention = SZExampleMention(withName: "Steven")
         mentionsListener?.addMention(mention)
         
         XCTAssert(mentionsListener?.mentions.first?.mentionRange.location == 18)
@@ -391,12 +375,10 @@ class SZMentionsSwiftTests: XCTestCase, SZMentionsManagerProtocol, UITextViewDel
     }
     
     func testThatMentionsListenerReturnsTextFormattedBasedOnSZMentionConcreteFormatter(){
-        let mention = SZExampleMention()
-        mention.szMentionName = "John Appleseed"
+        let mention = SZExampleMention(withName: "John Appleseed")
         mention.szMentionId = 1234
         
-        let mention2 = SZExampleMention()
-        mention2.szMentionName = "Ada Augusta Byron"
+        let mention2 = SZExampleMention(withName: "Ada Augusta Byron")
         mention2.szMentionId = 1235
         
         textView.insertText("Hi @J")

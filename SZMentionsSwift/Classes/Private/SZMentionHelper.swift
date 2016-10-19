@@ -41,9 +41,7 @@ class SZMentionHelper {
 
         for mention in SZMentionHelper.mentionsAfterTextEntry(range, mentionsList: mentions)
         {
-            mention.mentionRange = NSRange.init(
-                location: mention.mentionRange.location + rangeAdjustment,
-                length: mention.mentionRange.length)
+            mention.location = mention.mentionRange.location + rangeAdjustment
         }
     }
 

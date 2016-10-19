@@ -55,11 +55,6 @@ let attributeConsistencyError = "Default and mention attributes must contain the
      @brief The name of the mention to be added to the UITextView when selected.
      */
     var szMentionName: String {get}
-
-    /**
-     @brief The range to place the mention at
-     */
-    var szMentionRange: NSRange {get}
     
     /**
     @brief A mention string that can be shared
@@ -581,24 +576,30 @@ open class SZMentionsListener: NSObject, UITextViewDelegate {
      is returned in the mentions array in the object parameter of the SZMention object.
      szMentionRange is used the range to place the metion at
      */
-    open func insertExistingMentions(_ existingMentions: [SZCreateMentionProtocol]) {
-        let mutableAttributedString = mentionsTextView.attributedText.mutableCopy()
+    open func insertExistingMentions(_ existingMentions: [SZMention]) {
+        let mutableAttributedString = mentionsTextView.attributedText.mutableCopy() as! NSMutableAttributedString
 
         for mention in existingMentions {
-            let range = mention.szMentionRange
+            let range = mention.mentionRange
             assert(range.location != NSNotFound, "Mention must have a range to insert into")
+            
+            
+            let substring = mutableAttributedString.attributedSubstring(from: mention.mentionRange).string
+            
+            if substring != mention.mentionData.szMentionName {
+                return
+            }
 
-            let szMention = SZMention(mentionRange: range, mentionObject: mention)
-            mutableMentions.append(szMention)
+            mutableMentions.append(mention)
 
             SZAttributedStringHelper.apply(
                 self.mentionTextAttributes,
                 range:range,
-                mutableAttributedString: mutableAttributedString as! NSMutableAttributedString)
+                mutableAttributedString: mutableAttributedString)
         }
 
         settingText = true
-        mentionsTextView.attributedText = mutableAttributedString as! NSAttributedString
+        mentionsTextView.attributedText = mutableAttributedString
         settingText = false
     }
 
@@ -630,8 +631,8 @@ open class SZMentionsListener: NSObject, UITextViewDelegate {
             mention.szMentionName.characters.count)
 
         let szmention = SZMention.init(
-            mentionRange: self.currentMentionRange!,
-            mentionObject: mention)
+            location:  (self.currentMentionRange?.location)!,
+            mentionData: mention)
         self.mutableMentions.append(szmention)
 
         SZAttributedStringHelper.apply(
@@ -838,7 +839,7 @@ extension UITextView{
             
             stringFormatted = stringFormatted.appending(buffer)
             lastIndex = mention.mentionRange.location+mention.mentionRange.length
-            stringFormatted = stringFormatted.appending(mention.mentionObject.toString())
+            stringFormatted = stringFormatted.appending(mention.mentionData.toString())
         }
         
         if lastIndex < originalText.length {

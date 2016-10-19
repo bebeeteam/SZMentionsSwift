@@ -10,8 +10,7 @@ import UIKit
 import SZMentionsSwift
 
 class SZExampleMention: SZCreateMentionProtocol {
-    @objc var szMentionName: String = ""
-    @objc var szMentionRange: NSRange = NSMakeRange(0, 0)
+    fileprivate(set) var szMentionName: String = ""
     var szMentionId: Int = 0
     
     /**
@@ -19,5 +18,9 @@ class SZExampleMention: SZCreateMentionProtocol {
      */
     public func toString() -> String {
         return "@[\(szMentionName)][\(szMentionId)]"
+    }
+    
+    public init(withName name: String){
+        self.szMentionName = name
     }
 }
